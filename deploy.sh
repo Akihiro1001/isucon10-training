@@ -16,7 +16,7 @@ go build
 
 # サービス再起動
 sudo systemctl restart nginx
-sudo systemctl restart mysqld
+sudo systemctl restart mysql
 sudo systemctl restart isuumo.go
 
 # ログクリア
