@@ -38,4 +38,4 @@ CREATE TABLE isuumo.chair
 );
 
 -- TAKI:インデックス追加
-CREATE INDEX popularity_idx ON isuumo.estate.estate(popularity);
+CREATE INDEX popularity_idx ON estate(popularity);
