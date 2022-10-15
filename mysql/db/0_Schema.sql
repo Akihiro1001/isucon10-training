@@ -36,3 +36,6 @@ CREATE TABLE isuumo.chair
     popularity  INTEGER         NOT NULL,
     stock       INTEGER         NOT NULL
 );
+
+-- TAKI:インデックス追加
+CREATE INDEX popularity_idx ON isuumo.estate.estate(popularity);
