@@ -13,6 +13,8 @@ import (
 	"strconv"
 	"strings"
 
+	_ "net/http/pprof"
+
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/jmoiron/sqlx"
 	"github.com/labstack/echo"
@@ -239,6 +241,11 @@ func init() {
 }
 
 func main() {
+	// TAKI:pprof設定追加
+	go func() {
+		log.Fatal(http.ListenAndServe(":6060", nil))
+	}()
+
 	// Echo instance
 	e := echo.New()
 	e.Debug = true
