@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # 分析データのリセット
-rm -rf /home/isucon/pprof/
+rm -rf /home/pprof/
 
 # 公開サーバーのプロセス停止
 kill -9 $(lsof -t -i :8080)
