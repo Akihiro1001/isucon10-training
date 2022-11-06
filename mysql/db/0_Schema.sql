@@ -17,7 +17,8 @@ CREATE TABLE isuumo.estate
     door_height INTEGER             NOT NULL,
     door_width  INTEGER             NOT NULL,
     features    VARCHAR(64)         NOT NULL,
-    popularity  INTEGER             NOT NULL
+    popularity  INTEGER             NOT NULL,
+    popularity_desc INTEGER AS (-popularity) NOT NULL --TAKI:popularityの降順にインデックス追加
 );
 
 CREATE TABLE isuumo.chair
@@ -37,5 +38,5 @@ CREATE TABLE isuumo.chair
     stock       INTEGER         NOT NULL
 );
 
--- TAKI:インデックス追加
-ALTER TABLE isuumo.estate ADD INDEX idx_popularity(popularity DESC);
+--TAKI:popularityの降順にインデックス追加
+ALTER TABLE isuumo.estate ADD INDEX idx_popularity(popularity_desc,id);
