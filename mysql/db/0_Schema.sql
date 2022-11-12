@@ -22,6 +22,9 @@ CREATE TABLE isuumo.estate
     popularity_desc INTEGER AS (-popularity) NOT NULL
 );
 
+
+
+
 CREATE TABLE isuumo.chair
 (
     id          INTEGER         NOT NULL PRIMARY KEY,
@@ -40,4 +43,4 @@ CREATE TABLE isuumo.chair
 );
 
 --TAKI:インデックス追加
-ALTER TABLE isuumo.estate ADD INDEX idx_popularity_desc_id(popularity_desc,id);
+ALTER TABLE estate ADD INDEX idx_popularity_desc_id(popularity_desc,id);

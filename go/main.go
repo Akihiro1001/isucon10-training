@@ -309,6 +309,8 @@ func initialize(c echo.Context) error {
 			mySQLConnectionData.DBName,
 			sqlFile,
 		)
+
+		c.Echo().Logger.Infof("エラー確認用ログ : %s", cmdStr)
 		if err := exec.Command("bash", "-c", cmdStr).Run(); err != nil {
 			c.Logger().Errorf("Initialize script error : %v", err)
 			return c.NoContent(http.StatusInternalServerError)
