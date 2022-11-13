@@ -917,7 +917,8 @@ func searchEstateNazotte(c echo.Context) error {
 		query := fmt.Sprintf(`SELECT * FROM estate WHERE id = ? AND ST_Contains(ST_PolygonFromText(%s), ST_GeomFromText(%s))`, coordinates.coordinatesToText(), point)
 
 		// TAKI
-		c.Echo().Logger.Infof("動作確認用ログ(query) : %s", query)
+		c.Echo().Logger.Infof("動作確認用ログ(coordinates.coordinatesToText) : %s", coordinates.coordinatesToText())
+		c.Echo().Logger.Infof("動作確認用ログ(point) : %s", point)
 
 		err = db.Get(&validatedEstate, query, estate.ID)
 		if err != nil {
