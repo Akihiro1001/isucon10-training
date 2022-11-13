@@ -888,50 +888,48 @@ func searchEstateNazotte(c echo.Context) error {
 	}
 
 	b := coordinates.getBoundingBox()
-	estatesInBoundingBox := []Estate{}
+	// estatesInBoundingBox := []Estate{}
 
-	// TAKI:popularity_descでソート
-	// query := `SELECT * FROM estate WHERE latitude <= ? AND latitude >= ? AND longitude <= ? AND longitude >= ? ORDER BY popularity DESC, id ASC`
-	query := `SELECT * FROM estate WHERE latitude <= ? AND latitude >= ? AND longitude <= ? AND longitude >= ? ORDER BY popularity_desc, id ASC`
-	// TAKI
+	// // TAKI:popularity_descでソート
+	// // query := `SELECT * FROM estate WHERE latitude <= ? AND latitude >= ? AND longitude <= ? AND longitude >= ? ORDER BY popularity DESC, id ASC`
+	// query := `SELECT * FROM estate WHERE latitude <= ? AND latitude >= ? AND longitude <= ? AND longitude >= ? ORDER BY popularity_desc, id ASC`
+	// // TAKI
 
-	// TAKI(メモ):囲った範囲にある物件一覧を取得
-	err = db.Select(&estatesInBoundingBox, query, b.BottomRightCorner.Latitude, b.TopLeftCorner.Latitude, b.BottomRightCorner.Longitude, b.TopLeftCorner.Longitude)
+	// // TAKI(メモ):四角形の範囲にある物件一覧を取得
+	// err = db.Select(&estatesInBoundingBox, query, b.BottomRightCorner.Latitude, b.TopLeftCorner.Latitude, b.BottomRightCorner.Longitude, b.TopLeftCorner.Longitude)
 
-	if err == sql.ErrNoRows {
-		c.Echo().Logger.Infof("select * from estate where latitude ...", err)
-		return c.JSON(http.StatusOK, EstateSearchResponse{Count: 0, Estates: []Estate{}})
-	} else if err != nil {
-		c.Echo().Logger.Errorf("database execution error : %v", err)
-		return c.NoContent(http.StatusInternalServerError)
-	}
+	// if err == sql.ErrNoRows {
+	// 	c.Echo().Logger.Infof("select * from estate where latitude ...", err)
+	// 	return c.JSON(http.StatusOK, EstateSearchResponse{Count: 0, Estates: []Estate{}})
+	// } else if err != nil {
+	// 	c.Echo().Logger.Errorf("database execution error : %v", err)
+	// 	return c.NoContent(http.StatusInternalServerError)
+	// }
 
 	estatesInPolygon := []Estate{}
-	for _, estate := range estatesInBoundingBox {
-		validatedEstate := Estate{}
 
-		// TAKI
-		c.Echo().Logger.Infof("動作確認用ログ(estate) : %s", estate)
+	query := `SELECT * FROM estate WHERE latitude <= ? AND latitude >= ? AND longitude <= ? AND longitude >= ? AND ST_Contains(ST_PolygonFromText(%s), ST_GeomFromText(CONCAT ('POINT(',latitude,' ',longitude,')'))) ORDER BY popularity_desc, id ASC`
+	err = db.Select(&estatesInPolygon, query, b.BottomRightCorner.Latitude, b.TopLeftCorner.Latitude, b.BottomRightCorner.Longitude, b.TopLeftCorner.Longitude, coordinates.coordinatesToText())
 
-		point := fmt.Sprintf("'POINT(%f %f)'", estate.Latitude, estate.Longitude)
-		query := fmt.Sprintf(`SELECT * FROM estate WHERE id = ? AND ST_Contains(ST_PolygonFromText(%s), ST_GeomFromText(%s))`, coordinates.coordinatesToText(), point)
+	// estatesInPolygon := []Estate{}
+	// for _, estate := range estatesInBoundingBox {
+	// 	validatedEstate := Estate{}
 
-		// TAKI
-		c.Echo().Logger.Infof("動作確認用ログ(coordinates.coordinatesToText) : %s", coordinates.coordinatesToText())
-		c.Echo().Logger.Infof("動作確認用ログ(point) : %s", point)
+	// 	point := fmt.Sprintf("'POINT(%f %f)'", estate.Latitude, estate.Longitude)
+	// 	query := fmt.Sprintf(`SELECT * FROM estate WHERE id = ? AND ST_Contains(ST_PolygonFromText(%s), ST_GeomFromText(%s))`, coordinates.coordinatesToText(), point)
 
-		err = db.Get(&validatedEstate, query, estate.ID)
-		if err != nil {
-			if err == sql.ErrNoRows {
-				continue
-			} else {
-				c.Echo().Logger.Errorf("db access is failed on executing validate if estate is in polygon : %v", err)
-				return c.NoContent(http.StatusInternalServerError)
-			}
-		} else {
-			estatesInPolygon = append(estatesInPolygon, validatedEstate)
-		}
-	}
+	// 	err = db.Get(&validatedEstate, query, estate.ID)
+	// 	if err != nil {
+	// 		if err == sql.ErrNoRows {
+	// 			continue
+	// 		} else {
+	// 			c.Echo().Logger.Errorf("db access is failed on executing validate if estate is in polygon : %v", err)
+	// 			return c.NoContent(http.StatusInternalServerError)
+	// 		}
+	// 	} else {
+	// 		estatesInPolygon = append(estatesInPolygon, validatedEstate)
+	// 	}
+	// }
 
 	var re EstateSearchResponse
 	re.Estates = []Estate{}
@@ -1010,6 +1008,7 @@ func (cs Coordinates) getBoundingBox() BoundingBox {
 	return boundingBox
 }
 
+// TAKI:「POLYGON((11111 22222,333333 444444))」みたいな文字列に変換
 func (cs Coordinates) coordinatesToText() string {
 	points := make([]string, 0, len(cs.Coordinates))
 	for _, c := range cs.Coordinates {
