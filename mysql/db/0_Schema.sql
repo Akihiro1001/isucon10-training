@@ -4,6 +4,7 @@ CREATE DATABASE isuumo;
 DROP TABLE IF EXISTS isuumo.estate;
 DROP TABLE IF EXISTS isuumo.chair;
 
+/** TAKI:popularity_desc追加 */
 CREATE TABLE isuumo.estate
 (
     id          INTEGER             NOT NULL PRIMARY KEY,
@@ -21,6 +22,8 @@ CREATE TABLE isuumo.estate
     popularity_desc INTEGER AS (-popularity) NOT NULL
 );
 
+
+/** TAKI:popularity_desc追加 */
 CREATE TABLE isuumo.chair
 (
     id          INTEGER         NOT NULL PRIMARY KEY,
@@ -35,7 +38,11 @@ CREATE TABLE isuumo.chair
     features    VARCHAR(64)     NOT NULL,
     kind        VARCHAR(64)     NOT NULL,
     popularity  INTEGER         NOT NULL,
-    stock       INTEGER         NOT NULL
+    stock       INTEGER         NOT NULL,
+    popularity_desc INTEGER AS (-popularity) NOT NULL
 );
 
+
+/** TAKI:インデックス追加 */
 ALTER TABLE isuumo.estate ADD INDEX idx_popularity_desc_id(popularity_desc,id);
+ALTER TABLE isuumo.chair ADD INDEX idx_popularity_desc_id(popularity_desc,id);
