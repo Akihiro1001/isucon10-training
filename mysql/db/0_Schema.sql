@@ -24,7 +24,7 @@ CREATE TABLE isuumo.estate
 
 /** TAKI:インデックス追加 */
 ALTER TABLE isuumo.estate ADD INDEX idx_popularity_desc_id(popularity_desc,id);
-ALTER TABLE isuumo.estate ADD INDEX idx_estate_rent_id (rent,id);
+ALTER TABLE isuumo.estate ADD INDEX idx_rent_id (rent,id);
 
 /** TAKI:popularity_desc追加 */
 CREATE TABLE isuumo.chair
@@ -48,3 +48,4 @@ CREATE TABLE isuumo.chair
 
 /** TAKI:インデックス追加 */
 ALTER TABLE isuumo.chair ADD INDEX idx_popularity_desc_id(popularity_desc,id);
+ALTER TABLE isuumo.chair ADD INDEX idx_price_id (price,id);
