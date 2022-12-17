@@ -252,8 +252,8 @@ func main() {
 
 	// Echo instance
 	e := echo.New()
-	e.Debug = true
 	// TAKI:ログ出力をエラーログだけにする
+	// e.Debug = true
 	e.Logger.SetLevel(log.ERROR)
 
 	// Middleware
