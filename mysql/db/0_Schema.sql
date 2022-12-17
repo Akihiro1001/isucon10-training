@@ -27,6 +27,7 @@ ALTER TABLE isuumo.estate ADD INDEX idx_popularity_desc_id(popularity_desc,id);
 ALTER TABLE isuumo.estate ADD INDEX idx_rent_id (rent,id);
 ALTER TABLE isuumo.estate ADD INDEX idx_door_width_rent(door_width,rent);
 ALTER TABLE isuumo.estate ADD INDEX idx_door_height_rent(door_height,rent);
+ALTER TABLE isuumo.estate ADD INDEX idx_latitude_longitude_popularity_desc(latitude,longitude,popularity_desc);
 
 /** TAKI:popularity_desc追加 */
 CREATE TABLE isuumo.chair
