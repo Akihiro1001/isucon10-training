@@ -952,7 +952,7 @@ func searchEstateNazotte(c echo.Context) error {
 
 	estatesInPolygon := []Estate{}
 
-	query := fmt.Sprintf(`SELECT * FROM estate WHERE latitude <= ? AND latitude >= ? AND longitude <= ? AND longitude >= ? AND ST_Contains(ST_PolygonFromText(%s), ST_GeomFromText(CONCAT ('POINT(',latitude,' ',longitude,')'))) ORDER BY popularity_desc, id ASC`, coordinates.coordinatesToText())
+	query := fmt.Sprintf(`SELECT * FROM estate WHERE latitude <= ? AND latitude >= ? AND longitude <= ? AND longitude >= ? AND ST_Contains(ST_PolygonFromText(%s), ST_GeomFromText(CONCAT ('POINT(',latitude,' ',longitude,')'))) ORDER BY popularity_desc, id ASC LIMIT 50`, coordinates.coordinatesToText())
 
 	err = db.Select(&estatesInPolygon, query, b.BottomRightCorner.Latitude, b.TopLeftCorner.Latitude, b.BottomRightCorner.Longitude, b.TopLeftCorner.Longitude)
 
@@ -985,11 +985,12 @@ func searchEstateNazotte(c echo.Context) error {
 
 	var re EstateSearchResponse
 	re.Estates = []Estate{}
-	if len(estatesInPolygon) > NazotteLimit {
-		re.Estates = estatesInPolygon[:NazotteLimit]
-	} else {
-		re.Estates = estatesInPolygon
-	}
+	// if len(estatesInPolygon) > NazotteLimit {
+	// 	re.Estates = estatesInPolygon[:NazotteLimit]
+	// } else {
+	// 	re.Estates = estatesInPolygon
+	// }
+	re.Estates = estatesInPolygon
 	re.Count = int64(len(re.Estates))
 
 	return c.JSON(http.StatusOK, re)
