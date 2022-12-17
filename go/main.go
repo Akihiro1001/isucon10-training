@@ -676,6 +676,14 @@ func postEstate(c echo.Context) error {
 		return c.NoContent(http.StatusInternalServerError)
 	}
 	defer tx.Rollback()
+
+	// バルクインサート用のSQL文を生成
+	var sql strings.Builder
+	sql.WriteString("INSERT INTO estate(id, name, description, thumbnail, address, latitude, longitude, rent, door_height, door_width, features, popularity) VALUES ")
+
+	// バルクインサート用のパラメータを格納する配列
+	var params []interface{}
+
 	for _, row := range records {
 		rm := RecordMapper{Record: row}
 		id := rm.NextInt()
@@ -694,16 +702,29 @@ func postEstate(c echo.Context) error {
 			c.Logger().Errorf("failed to read record: %v", err)
 			return c.NoContent(http.StatusBadRequest)
 		}
-		_, err := tx.Exec("INSERT INTO estate(id, name, description, thumbnail, address, latitude, longitude, rent, door_height, door_width, features, popularity) VALUES(?,?,?,?,?,?,?,?,?,?,?,?)", id, name, description, thumbnail, address, latitude, longitude, rent, doorHeight, doorWidth, features, popularity)
-		if err != nil {
-			c.Logger().Errorf("failed to insert estate: %v", err)
-			return c.NoContent(http.StatusInternalServerError)
-		}
+
+		// SQL文のVALUES句に、新しい行を追加
+		sql.WriteString("(?,?,?,?,?,?,?,?,?,?,?,?),")
+		// パラメータを配列に追加
+		params = append(params, id, name, description, thumbnail, address, latitude, longitude, rent, doorHeight, doorWidth, features, popularity)
 	}
+
+	// 最後のカンマを削除
+	sqlStr := sql.String()
+	sqlFixed := sqlStr[:len(sqlStr)-1]
+
+	// バルクインサートを実行
+	_, err = tx.Exec(sqlFixed, params...)
+	if err != nil {
+		c.Logger().Errorf("failed to insert estate: %v", err)
+		return c.NoContent(http.StatusInternalServerError)
+	}
+
 	if err := tx.Commit(); err != nil {
 		c.Logger().Errorf("failed to commit tx: %v", err)
 		return c.NoContent(http.StatusInternalServerError)
 	}
+
 	return c.NoContent(http.StatusCreated)
 }
 
