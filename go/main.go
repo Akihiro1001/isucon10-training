@@ -252,8 +252,9 @@ func main() {
 
 	// Echo instance
 	e := echo.New()
-	e.Debug = true
-	e.Logger.SetLevel(log.DEBUG)
+	// TAKI:ログ出力をエラーログだけにする
+	// e.Debug = true
+	e.Logger.SetLevel(log.ERROR)
 
 	// Middleware
 	e.Use(middleware.Logger())
@@ -375,7 +376,18 @@ func postChair(c echo.Context) error {
 		return c.NoContent(http.StatusInternalServerError)
 	}
 	defer tx.Rollback()
-	for _, row := range records {
+
+	// TAKI:バルクインサート対応(Start)
+	var chairs []interface{}
+
+	query := "INSERT INTO chair(id, name, description, thumbnail, price, height, width, depth, color, features, kind, popularity, stock) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)"
+
+	for index, row := range records {
+
+		if index != 0 {
+			query += ",(?,?,?,?,?,?,?,?,?,?,?,?,?)"
+		}
+
 		rm := RecordMapper{Record: row}
 		id := rm.NextInt()
 		name := rm.NextString()
@@ -390,16 +402,30 @@ func postChair(c echo.Context) error {
 		kind := rm.NextString()
 		popularity := rm.NextInt()
 		stock := rm.NextInt()
+
 		if err := rm.Err(); err != nil {
 			c.Logger().Errorf("failed to read record: %v", err)
 			return c.NoContent(http.StatusBadRequest)
 		}
-		_, err := tx.Exec("INSERT INTO chair(id, name, description, thumbnail, price, height, width, depth, color, features, kind, popularity, stock) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)", id, name, description, thumbnail, price, height, width, depth, color, features, kind, popularity, stock)
-		if err != nil {
-			c.Logger().Errorf("failed to insert chair: %v", err)
-			return c.NoContent(http.StatusInternalServerError)
-		}
+
+		chairs = append(chairs, id, name, description, thumbnail, price, height, width, depth, color, features, kind, popularity, stock)
+
+		// _, err := tx.Exec("INSERT INTO chair(id, name, description, thumbnail, price, height, width, depth, color, features, kind, popularity, stock) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)", id, name, description, thumbnail, price, height, width, depth, color, features, kind, popularity, stock)
+		// if err != nil {
+		// 	c.Logger().Errorf("failed to insert chair: %v", err)
+		// 	return c.NoContent(http.StatusInternalServerError)
+		// }
 	}
+
+	_, err = db.Exec(query, chairs...)
+
+	if err != nil {
+		c.Logger().Errorf("failed to insert chair: %v", err)
+		return c.NoContent(http.StatusInternalServerError)
+	}
+
+	// TAKI:バルクインサート対応(End)
+
 	if err := tx.Commit(); err != nil {
 		c.Logger().Errorf("failed to commit tx: %v", err)
 		return c.NoContent(http.StatusInternalServerError)
@@ -676,6 +702,14 @@ func postEstate(c echo.Context) error {
 		return c.NoContent(http.StatusInternalServerError)
 	}
 	defer tx.Rollback()
+
+	// バルクインサート用のSQL文を生成
+	var sql strings.Builder
+	sql.WriteString("INSERT INTO estate(id, name, description, thumbnail, address, latitude, longitude, rent, door_height, door_width, features, popularity) VALUES ")
+
+	// バルクインサート用のパラメータを格納する配列
+	var params []interface{}
+
 	for _, row := range records {
 		rm := RecordMapper{Record: row}
 		id := rm.NextInt()
@@ -694,16 +728,29 @@ func postEstate(c echo.Context) error {
 			c.Logger().Errorf("failed to read record: %v", err)
 			return c.NoContent(http.StatusBadRequest)
 		}
-		_, err := tx.Exec("INSERT INTO estate(id, name, description, thumbnail, address, latitude, longitude, rent, door_height, door_width, features, popularity) VALUES(?,?,?,?,?,?,?,?,?,?,?,?)", id, name, description, thumbnail, address, latitude, longitude, rent, doorHeight, doorWidth, features, popularity)
-		if err != nil {
-			c.Logger().Errorf("failed to insert estate: %v", err)
-			return c.NoContent(http.StatusInternalServerError)
-		}
+
+		// SQL文のVALUES句に、新しい行を追加
+		sql.WriteString("(?,?,?,?,?,?,?,?,?,?,?,?),")
+		// パラメータを配列に追加
+		params = append(params, id, name, description, thumbnail, address, latitude, longitude, rent, doorHeight, doorWidth, features, popularity)
 	}
+
+	// 最後のカンマを削除
+	sqlStr := sql.String()
+	sqlFixed := sqlStr[:len(sqlStr)-1]
+
+	// バルクインサートを実行
+	_, err = tx.Exec(sqlFixed, params...)
+	if err != nil {
+		c.Logger().Errorf("failed to insert estate: %v", err)
+		return c.NoContent(http.StatusInternalServerError)
+	}
+
 	if err := tx.Commit(); err != nil {
 		c.Logger().Errorf("failed to commit tx: %v", err)
 		return c.NoContent(http.StatusInternalServerError)
 	}
+
 	return c.NoContent(http.StatusCreated)
 }
 
@@ -905,7 +952,7 @@ func searchEstateNazotte(c echo.Context) error {
 
 	estatesInPolygon := []Estate{}
 
-	query := fmt.Sprintf(`SELECT * FROM estate WHERE latitude <= ? AND latitude >= ? AND longitude <= ? AND longitude >= ? AND ST_Contains(ST_PolygonFromText(%s), ST_GeomFromText(CONCAT ('POINT(',latitude,' ',longitude,')'))) ORDER BY popularity_desc, id ASC LIMIT 50`, coordinates.coordinatesToText())
+	query := fmt.Sprintf(`SELECT * FROM estate WHERE latitude <= ? AND latitude >= ? AND longitude <= ? AND longitude >= ? AND ST_Contains(ST_PolygonFromText(%s), ST_GeomFromText(CONCAT ('POINT(',latitude,' ',longitude,')'))) ORDER BY popularity_desc, id ASC`, coordinates.coordinatesToText())
 
 	err = db.Select(&estatesInPolygon, query, b.BottomRightCorner.Latitude, b.TopLeftCorner.Latitude, b.BottomRightCorner.Longitude, b.TopLeftCorner.Longitude)
 
@@ -938,12 +985,11 @@ func searchEstateNazotte(c echo.Context) error {
 
 	var re EstateSearchResponse
 	re.Estates = []Estate{}
-	// if len(estatesInPolygon) > NazotteLimit {
-	// 	re.Estates = estatesInPolygon[:NazotteLimit]
-	// } else {
-	// 	re.Estates = estatesInPolygon
-	// }
-	re.Estates = estatesInPolygon
+	if len(estatesInPolygon) > NazotteLimit {
+		re.Estates = estatesInPolygon[:NazotteLimit]
+	} else {
+		re.Estates = estatesInPolygon
+	}
 	re.Count = int64(len(re.Estates))
 
 	return c.JSON(http.StatusOK, re)
