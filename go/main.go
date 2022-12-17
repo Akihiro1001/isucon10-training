@@ -50,6 +50,7 @@ type Chair struct {
 	Popularity     int64  `db:"popularity" json:"-"`
 	Stock          int64  `db:"stock" json:"-"`
 	PopularityDesc int64  `db:"popularity_desc" json:"-"`
+	Geom           string `db:"geom" json:"-"`
 }
 
 type ChairSearchResponse struct {
@@ -77,6 +78,7 @@ type Estate struct {
 	Features       string  `db:"features" json:"features"`
 	Popularity     int64   `db:"popularity" json:"-"`
 	PopularityDesc int64   `db:"popularity_desc" json:"-"`
+	Geom           string  `db:"geom" json:"-"`
 }
 
 //EstateSearchResponse estate/searchへのレスポンスの形式
