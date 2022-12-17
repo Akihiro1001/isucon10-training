@@ -20,7 +20,7 @@ CREATE TABLE isuumo.estate
     features    VARCHAR(64)         NOT NULL,
     popularity  INTEGER             NOT NULL,
     popularity_desc INTEGER AS (-popularity) NOT NULL,
-    geom POINT AS (ST_GeomFromText(CONCAT ('POINT(',latitude,' ',longitude,')'))) NOT NULL
+    geom POINT AS (POINT(latitude, longitude)) NOT NULL
 );
 
 /** TAKI:インデックス追加 */
