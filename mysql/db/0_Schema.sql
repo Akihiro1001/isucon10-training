@@ -51,3 +51,6 @@ CREATE TABLE isuumo.chair
 /** TAKI:インデックス追加 */
 ALTER TABLE isuumo.chair ADD INDEX idx_popularity_desc_id(popularity_desc,id);
 ALTER TABLE isuumo.chair ADD INDEX idx_price_id (price,id);
+ALTER TABLE isuumo.chair ADD INDEX idx_price_stock(price, stock);
+ALTER TABLE isuumo.chair ADD INDEX idx_height_stock(height, stock);
+ALTER TABLE isuumo.chair ADD INDEX idx_kind_stock(kind, stock);
