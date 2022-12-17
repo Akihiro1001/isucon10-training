@@ -19,7 +19,8 @@ CREATE TABLE isuumo.estate
     door_width  INTEGER             NOT NULL,
     features    VARCHAR(64)         NOT NULL,
     popularity  INTEGER             NOT NULL,
-    popularity_desc INTEGER AS (-popularity) NOT NULL
+    popularity_desc INTEGER AS (-popularity) NOT NULL,
+    geom POINT AS (ST_GeomFromText(CONCAT ('POINT(',latitude,' ',longitude,')'))) NOT NULL
 );
 
 /** TAKI:インデックス追加 */
