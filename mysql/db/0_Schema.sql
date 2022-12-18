@@ -20,7 +20,7 @@ CREATE TABLE isuumo.estate
     features    VARCHAR(64)         NOT NULL,
     popularity  INTEGER             NOT NULL,
     popularity_desc INTEGER AS (-popularity) NOT NULL,
-    geom POINT AS (POINT(latitude, longitude)) NOT NULL
+    geom POINT NOT NULL
 );
 
 /** TAKI:インデックス追加 */
@@ -29,6 +29,7 @@ ALTER TABLE isuumo.estate ADD INDEX idx_rent_id (rent,id);
 ALTER TABLE isuumo.estate ADD INDEX idx_door_width_rent(door_width,rent);
 ALTER TABLE isuumo.estate ADD INDEX idx_door_height_rent(door_height,rent);
 ALTER TABLE isuumo.estate ADD INDEX idx_latitude_longitude_popularity_desc(latitude,longitude,popularity_desc);
+ALTER TABLE isuumo.estate ADD SPATIAL INDEX idx_geom(geom);
 
 /** TAKI:popularity_desc追加 */
 CREATE TABLE isuumo.chair
