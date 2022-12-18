@@ -612,15 +612,22 @@ func buyChair(c echo.Context) error {
 	// 	return c.NoContent(http.StatusInternalServerError)
 	// }
 
-	_, err = tx.Exec("UPDATE chair SET stock = stock - 1 WHERE id = ? AND stock > 0", id)
+	res, err := tx.Exec("UPDATE chair SET stock = stock - 1 WHERE id = ? AND stock > 0", id)
+
+	if err != nil {
+		c.Echo().Logger.Errorf("DB Execution Error: on getting a chair by id : %v", err)
+		return c.NoContent(http.StatusInternalServerError)
+	}
+
 	if err != nil {
 		c.Echo().Logger.Infof("buyChair chair id \"%v\" not found", id)
 		return c.NoContent(http.StatusNotFound)
 	}
-	// if err != nil {
-	// 	c.Echo().Logger.Errorf("chair stock update failed : %v", err)
-	// 	return c.NoContent(http.StatusInternalServerError)
-	// }
+	rowaffected, _ := res.RowsAffected()
+	if rowaffected < 1 {
+		c.Echo().Logger.Infof("buyChair chair id \"%v\" not found", id)
+		return c.NoContent(http.StatusNotFound)
+	}
 
 	err = tx.Commit()
 	if err != nil {
