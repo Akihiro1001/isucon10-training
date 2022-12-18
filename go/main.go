@@ -707,7 +707,7 @@ func postEstate(c echo.Context) error {
 
 	// バルクインサート用のSQL文を生成
 	var sql strings.Builder
-	sql.WriteString("INSERT INTO estate(id, name, description, thumbnail, address, latitude, longitude, rent, door_height, door_width, features, popularity) VALUES ")
+	sql.WriteString("INSERT INTO estate(id, name, description, thumbnail, address, latitude, longitude, rent, door_height, door_width, features, popularity, geom) VALUES ")
 
 	// バルクインサート用のパラメータを格納する配列
 	var params []interface{}
@@ -732,9 +732,9 @@ func postEstate(c echo.Context) error {
 		}
 
 		// SQL文のVALUES句に、新しい行を追加
-		sql.WriteString("(?,?,?,?,?,?,?,?,?,?,?,?),")
+		sql.WriteString("(?,?,?,?,?,?,?,?,?,?,?,?,POINT(?, ?)),")
 		// パラメータを配列に追加
-		params = append(params, id, name, description, thumbnail, address, latitude, longitude, rent, doorHeight, doorWidth, features, popularity)
+		params = append(params, id, name, description, thumbnail, address, latitude, longitude, rent, doorHeight, doorWidth, features, popularity, latitude, longitude)
 	}
 
 	// 最後のカンマを削除
