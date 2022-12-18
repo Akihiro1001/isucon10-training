@@ -601,22 +601,26 @@ func buyChair(c echo.Context) error {
 	}
 	defer tx.Rollback()
 
-	var chair Chair
-	err = tx.QueryRowx("SELECT * FROM chair WHERE id = ? AND stock > 0 FOR UPDATE", id).StructScan(&chair)
-	if err != nil {
-		if err == sql.ErrNoRows {
-			c.Echo().Logger.Infof("buyChair chair id \"%v\" not found", id)
-			return c.NoContent(http.StatusNotFound)
-		}
-		c.Echo().Logger.Errorf("DB Execution Error: on getting a chair by id : %v", err)
-		return c.NoContent(http.StatusInternalServerError)
-	}
+	// var chair Chair
+	// err = tx.QueryRowx("SELECT * FROM chair WHERE id = ? AND stock > 0 FOR UPDATE", id).StructScan(&chair)
+	// if err != nil {
+	// 	if err == sql.ErrNoRows {
+	// 		c.Echo().Logger.Infof("buyChair chair id \"%v\" not found", id)
+	// 		return c.NoContent(http.StatusNotFound)
+	// 	}
+	// 	c.Echo().Logger.Errorf("DB Execution Error: on getting a chair by id : %v", err)
+	// 	return c.NoContent(http.StatusInternalServerError)
+	// }
 
-	_, err = tx.Exec("UPDATE chair SET stock = stock - 1 WHERE id = ?", id)
+	_, err = tx.Exec("UPDATE chair SET stock = stock - 1 WHERE id = ? AND stock > 0", id)
 	if err != nil {
-		c.Echo().Logger.Errorf("chair stock update failed : %v", err)
-		return c.NoContent(http.StatusInternalServerError)
+		c.Echo().Logger.Infof("buyChair chair id \"%v\" not found", id)
+		return c.NoContent(http.StatusNotFound)
 	}
+	// if err != nil {
+	// 	c.Echo().Logger.Errorf("chair stock update failed : %v", err)
+	// 	return c.NoContent(http.StatusInternalServerError)
+	// }
 
 	err = tx.Commit()
 	if err != nil {
