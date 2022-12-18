@@ -936,8 +936,9 @@ func searchEstateNazotte(c echo.Context) error {
 	if len(coordinates.Coordinates) == 0 {
 		return c.NoContent(http.StatusBadRequest)
 	}
+	// 四角形でざっくり絞り込みを行わない
+	// b := coordinates.getBoundingBox()
 
-	b := coordinates.getBoundingBox()
 	// estatesInBoundingBox := []Estate{}
 
 	// query := `SELECT * FROM estate WHERE latitude <= ? AND latitude >= ? AND longitude <= ? AND longitude >= ? ORDER BY popularity_desc, id ASC`
@@ -955,9 +956,9 @@ func searchEstateNazotte(c echo.Context) error {
 
 	estatesInPolygon := []Estate{}
 
-	query := fmt.Sprintf(`SELECT * FROM estate FORCE INDEX (idx_latitude_longitude_popularity_desc) WHERE latitude <= ? AND latitude >= ? AND longitude <= ? AND longitude >= ? AND ST_Contains(ST_PolygonFromText(%s), geom) ORDER BY popularity_desc, id ASC`, coordinates.coordinatesToText())
+	query := fmt.Sprintf(`SELECT * FROM estate WHERE ST_Contains(ST_PolygonFromText(%s), geom) ORDER BY popularity_desc, id ASC`, coordinates.coordinatesToText())
 
-	err = db.Select(&estatesInPolygon, query, b.BottomRightCorner.Latitude, b.TopLeftCorner.Latitude, b.BottomRightCorner.Longitude, b.TopLeftCorner.Longitude)
+	err = db.Select(&estatesInPolygon, query)
 
 	if err == sql.ErrNoRows {
 		c.Echo().Logger.Infof("select * from estate where latitude ...", err)
